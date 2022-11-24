@@ -2,6 +2,7 @@
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 using Net6APIBasicAuthApiKey.Helpers;
 
 namespace Net6APIBasicAuthApiKey.Auth;
@@ -19,29 +20,26 @@ public class AuthenticationHandler : AuthenticationHandler<BasicAuthenticationOp
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
 
-        if (!Request.Headers.ContainsKey(Microsoft.Net.Http.Headers.HeaderNames.Authorization))
+        if (!Request.Headers.ContainsKey(HeaderNames.Authorization))
         {
-            Response.Headers.Add(Microsoft.Net.Http.Headers.HeaderNames.WWWAuthenticate, BasicAuthenticationSchemeName);
-            AuthenticateResult result =
-                AuthenticateResult.Fail("Proper authentication information is necessary to using this app.");
+            Response.Headers.Add(HeaderNames.WWWAuthenticate, BasicAuthenticationSchemeName);
+            var result = AuthenticateResult.Fail("Proper authentication information is necessary to use this app (missing header)!");
             return Task.FromResult(result);
         }
 
         if (Options.ServiceAccessInfo is null)
         {
-            base.Logger.LogError("Error in Authentiacation middleware. {ServiceAccessInfo} is null",
-                nameof(Options.ServiceAccessInfo));
+            Logger.LogError("Error in Authentication middleware. {serviceAccessInfo} is null", nameof(Options.ServiceAccessInfo));
             throw new InvalidOperationException("Invalid program state. The ServiceAccessInfo must be valid!");
         }
 
-        var authHeader = Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.Authorization];
-        var userdata = authHeader.ToString().Remove(0, BasicAuthenticationSchemeName.Length + 1);
-        var decodedUserdata = EncodingHelper.Base64Decode(userdata);
+        var authHeader = Request.Headers[HeaderNames.Authorization];
+        string userdata = authHeader.ToString().Remove(0, BasicAuthenticationSchemeName.Length + 1);
+        string? decodedUserdata = EncodingHelper.Base64Decode(userdata);
         if (decodedUserdata != $"{Options.ServiceAccessInfo.User}:{Options.ServiceAccessInfo.Password}")
         {
-            Response.Headers.Add(Microsoft.Net.Http.Headers.HeaderNames.WWWAuthenticate, BasicAuthenticationSchemeName);
-            AuthenticateResult result =
-                AuthenticateResult.Fail("Proper authentication information is necessary to using this app.");
+            Response.Headers.Add(HeaderNames.WWWAuthenticate, BasicAuthenticationSchemeName);
+            var result = AuthenticateResult.Fail("Proper authentication information is necessary to use this app!");
             return Task.FromResult(result);
         }
 

@@ -17,34 +17,32 @@ public class AuthorizationService : IAuthorizationService
         }
         public Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, object? resource, IEnumerable<IAuthorizationRequirement> requirements)
         {
-            if (resource is HttpContext httpContext && user.Identity is not null)
-            {
-                var ip = httpContext.Connection.RemoteIpAddress;
-
-                if (!user.Identity.IsAuthenticated)
-                {
-                    _logger.LogInformation($"Unauthorized access {ip}");
-                    return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
-                }
-
-                if (!httpContext.Request.Headers.ContainsKey(ApiKeyHeaderValue))
-                {
-                    _logger.LogInformation($"Missing API-KEY:{ip}");
-                    return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
-                }
-
-                var headerApiKey = httpContext.Request.Headers[ApiKeyHeaderValue];
-                if (_serviceAccessInfo.ApiKey != headerApiKey)
-                {
-                    _logger.LogInformation($"Invalid API-KEY:{headerApiKey}:{ip}");
-                    return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
-                }
-                return Task.FromResult(AuthorizationResult.Success());
-            }
-            else
+            if (resource is not HttpContext httpContext || user.Identity is null) 
             {
                 return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
             }
+
+            var ip = httpContext.Connection.RemoteIpAddress;
+
+            if (!user.Identity.IsAuthenticated)
+            {
+                _logger.LogInformation("Unauthorized access {ip}", ip);
+                return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
+            }
+
+            if (!httpContext.Request.Headers.ContainsKey(ApiKeyHeaderValue))
+            {
+                _logger.LogInformation("Missing API-KEY:{ip}", ip);
+                return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
+            }
+
+            var headerApiKey = httpContext.Request.Headers[ApiKeyHeaderValue];
+            if (_serviceAccessInfo.ApiKey != headerApiKey)
+            {
+                _logger.LogInformation("Invalid API-KEY:{key}:{ip}", headerApiKey, ip);
+                return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
+            }
+            return Task.FromResult(AuthorizationResult.Success());
         }
 
         public Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, object? resource, string policyName)
