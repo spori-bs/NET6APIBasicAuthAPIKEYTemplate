@@ -26,20 +26,20 @@ public class AuthorizationService : IAuthorizationService
 
             if (!user.Identity.IsAuthenticated)
             {
-                _logger.LogInformation("Unauthorized access {}", ip);
+                _logger.LogInformation("Unauthorized access {ip}", ip);
                 return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
             }
 
             if (!httpContext.Request.Headers.ContainsKey(ApiKeyHeaderValue))
             {
-                _logger.LogInformation("Missing API-KEY:{}", ip);
+                _logger.LogInformation("Missing API-KEY:{ip}", ip);
                 return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
             }
 
             var headerApiKey = httpContext.Request.Headers[ApiKeyHeaderValue];
             if (_serviceAccessInfo.ApiKey != headerApiKey)
             {
-                _logger.LogInformation("Invalid API-KEY:{}:{}", headerApiKey, ip);
+                _logger.LogInformation("Invalid API-KEY:{key}:{ip}", headerApiKey, ip);
                 return Task.FromResult(AuthorizationResult.Failed(AuthorizationFailure.Failed(requirements)));
             }
             return Task.FromResult(AuthorizationResult.Success());

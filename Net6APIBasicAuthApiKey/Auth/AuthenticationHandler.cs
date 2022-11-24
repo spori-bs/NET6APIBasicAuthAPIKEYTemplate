@@ -29,7 +29,7 @@ public class AuthenticationHandler : AuthenticationHandler<BasicAuthenticationOp
 
         if (Options.ServiceAccessInfo is null)
         {
-            Logger.LogError("Error in Authentication middleware. {} is null", nameof(Options.ServiceAccessInfo));
+            Logger.LogError("Error in Authentication middleware. {serviceAccessInfo} is null", nameof(Options.ServiceAccessInfo));
             throw new InvalidOperationException("Invalid program state. The ServiceAccessInfo must be valid!");
         }
 
