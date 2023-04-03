@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "CryptService": {
+    "Net6API": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

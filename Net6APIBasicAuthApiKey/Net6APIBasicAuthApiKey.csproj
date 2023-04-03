@@ -9,11 +9,17 @@
     <ItemGroup>
         <PackageReference Include="FastEndpoints" Version="5.8.1" />
         <PackageReference Include="FastEndpoints.Swagger" Version="5.8.1" />
+        <PackageReference Include="MediatR" Version="12.0.1" />
         <PackageReference Include="NLog" Version="5.1.3" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.2.3" />
         <PackageReference Include="NLog.Schema" Version="5.1.3" />
         <PackageReference Include="NLog.Web.AspNetCore" Version="5.2.3" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Net6APILogic\Net6APILogic.csproj" />
+      <ProjectReference Include="..\Net6APIShared\Net6APIShared.csproj" />
     </ItemGroup>
 
 </Project>

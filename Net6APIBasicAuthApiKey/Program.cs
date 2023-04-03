@@ -12,6 +12,8 @@ using Net6APIBasicAuthApiKey.Models;
 using NLog.Web;
 using NSwag;
 
+using static Net6APILogic.LogicDIRegistrationExtension;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ServiceAccessInfo>(builder.Configuration.GetSection(nameof(ServiceAccessInfo)));
 builder.WebHost.ConfigureLogging(logging =>
@@ -31,8 +33,6 @@ if (bool.TryParse(builder.Configuration.GetSection("HttpLoggingIsEnabled").Value
 
     });
 }
-
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -84,6 +84,9 @@ builder.Services.AddSwaggerDoc(s =>
         Type = OpenApiSecuritySchemeType.Basic,
     });
 });
+
+
+builder.Services.APILogicRegistration();
 
 using var app = builder.Build();
 
