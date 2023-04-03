@@ -2,15 +2,35 @@
 //https://deviq.com/design-patterns/repr-design-pattern
 
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.HttpLogging;
 using Net6APIBasicAuthApiKey.Auth;
 using Net6APIBasicAuthApiKey.Helpers;
 using Net6APIBasicAuthApiKey.Models;
+using NLog.Web;
+using NSwag;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ServiceAccessInfo>(builder.Configuration.GetSection(nameof(ServiceAccessInfo)));
+builder.WebHost.ConfigureLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+}).UseNLog();
 
+if (bool.TryParse(builder.Configuration.GetSection("HttpLoggingIsEnabled").Value, out bool httpLoging) && httpLoging)
+{
+    builder.Services.AddHttpLogging(logging =>
+    {
+        logging.LoggingFields = HttpLoggingFields.All;
+        logging.RequestBodyLogLimit = int.MaxValue;
+        logging.ResponseBodyLogLimit = int.MaxValue;
+        logging.MediaTypeOptions.AddText("application/json");
+
+    });
+}
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -49,16 +69,25 @@ builder.Services.Configure<JsonOptions>(options =>
     options.SerializerOptions.WriteIndented = true;
     options.SerializerOptions.Converters.Add(new NullableDateOnlyConverter());
 });
-
+builder.Services.AddSwaggerDoc(s => 
+{
+    s.AddAuth("ApiKey", new()
+    {
+        Name = AuthorizationService.ApiKeyHeaderValue,
+        In = OpenApiSecurityApiKeyLocation.Header,
+        Type = OpenApiSecuritySchemeType.ApiKey,
+    });
+    s.AddAuth("Basic", new()
+    {
+        Name = "Basic",
+        In = OpenApiSecurityApiKeyLocation.Header,
+        Type = OpenApiSecuritySchemeType.Basic,
+    });
+});
 
 using var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 if (app.Environment.IsProduction())
 {
     app.UseHsts();
@@ -68,4 +97,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseFastEndpoints();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwaggerGen();
+    app.UseSwaggerUI();
+}
 app.Run();
